@@ -6,6 +6,7 @@ import { CSS3DRenderer, CSS3DObject } from "/modules/CSS3DRenderer.js";
 import { NoClipControls } from '/utils/NoClipControls.js'
 import { PhysicsObject } from '/utils/PhysicsObject.js'
 import { TerrainGenerator } from '/utils/TerrainGenerator.js'
+import { SoundStation } from '/utils/SoundStation.js'
 
 //THREE JS
 let camera, scene, renderer, composer, controls
@@ -226,9 +227,16 @@ function init() {
     createStars()
 
 
+
     //Large Star
     let terrain = new TerrainGenerator(scene)
     terrain.create()
+    console.log(terrain)
+
+
+    //points of interest
+    let SS = new SoundStation(scene)
+    SS.create()
     console.log(terrain)
 
     //Large Star
