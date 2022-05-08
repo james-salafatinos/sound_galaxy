@@ -7,7 +7,8 @@ import { NoClipControls } from '/utils/NoClipControls.js'
 import { PhysicsObject } from '/utils/PhysicsObject.js'
 import { TerrainGenerator } from '/utils/TerrainGenerator.js'
 import { SoundStation } from '/utils/SoundStation.js'
-
+import { AudioListener } from '/utils/AudioListener.js'
+import { Collisions } from '/utils/Collisions.js'
 //THREE JS
 let camera, scene, renderer, composer, controls
 let stats;
@@ -18,7 +19,16 @@ let frameIndex = 0
 let labelRenderer;
 let iFrame
 let cameraLookDir;
+let updatePositionForCamera;
+let collisions;
 let arrow;
+// let SS;
+let SS_Array = [];
+let AL;
+let SKYDOME;
+let label_meshes = []
+
+let MAP = new THREE.TextureLoader()
 init();
 animate();
 
@@ -27,7 +37,8 @@ function init() {
     var loader = new THREE.TextureLoader(),
         texture = loader.load("/static/nightsky2.jpg");
     scene.background = texture
-    scene.fog = new THREE.Fog(0xffffff, 100, 750);
+    scene.fog = new THREE.Fog(0xffffff, 750, 10000);
+
 
     //Create three.js stats
     stats = new Stats();
@@ -40,11 +51,11 @@ function init() {
     renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
-    // labelRenderer = new CSS3DRenderer();
-    // labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    // labelRenderer.domElement.style.position = 'absolute';
-    // labelRenderer.domElement.style.top = '0px';
-    // document.body.appendChild(labelRenderer.domElement);
+    labelRenderer = new CSS3DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    document.body.appendChild(labelRenderer.domElement);
 
 
     // LIGHTS
@@ -80,7 +91,7 @@ function init() {
 
     //Camera
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.y = 200;
+    camera.position.y = 100;
     camera.position.z = 150;
     camera.position.x = 10;
 
@@ -109,8 +120,10 @@ function init() {
         scene.add(mesh)
     }
 
-    let createFrame = function (url, _x, _y, _z) {
+    let createFrame = function (increment, _x, _y, _z) {
         let mat = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0
         });
         let geo = new THREE.BoxGeometry(.5, .5, .5)
         let mesh = new THREE.Mesh(geo, mat)
@@ -118,23 +131,27 @@ function init() {
         mesh.position.y = _y
         mesh.position.z = _z
 
-        var url = `https://en.wikipedia.org/wiki/Farran_Zerbe/`
+
+
         var html = [
 
-            '<div style="width:' + 0 + 'px; height:' + 0 + 'px;">',
-            '<iframe src="' + url + '" width="' + 800 + '" height="' + 800 + '">',
-            '</iframe>',
-            '</div>'
+            '<h1 style="font-size:50vw; color:white">Strings To My Guitar</h1>',
+            '<h1 style=""font-size:50vw; color:white" >Kiss & Love & F*ck</h1>',
+            '<h1 style="font-size:50vw; color:white" >Better off as asteroids</h1>',
+            '<h1 style="font-size:50vw; color:white" >Dionysis Den</h1>',
+            '<h1 style="font-size:50vw; color:white">The Inferno</h1>',
+            '<h1 style=""font-size:50vw; color:white" >Colors Of My Mind</h1>',
+            '<h1 style="font-size:50vw; color:white" >My Crush</h1>',
+            '<h1 style="font-size:50vw; color:white" >Do I Have ADHD?</h1>',
 
-        ].join('\n');
+        ]
 
-        // scene.add(mesh)
 
         let frameScale = new THREE.Vector3(.01, .01, .01)
 
         const frameDiv = document.createElement('div');
         frameDiv.className = 'label';
-        frameDiv.innerHTML = html;
+        frameDiv.innerHTML = html[increment];
         frameDiv.style.marginTop = '-1em';
         const frameLabel = new CSS3DObject(frameDiv);
         frameLabel.scale.set(frameScale.x, frameScale.y, frameScale.z)
@@ -143,7 +160,10 @@ function init() {
         frameLabel.position.x = -1
         frameLabel.position.y = 17
         frameLabel.position.z = -4
+
         mesh.add(frameLabel);
+        mesh.lookAt(camera.position)
+        label_meshes.push(mesh)
 
         scene.add(mesh)
         // labels.push(frameLabel)
@@ -151,8 +171,10 @@ function init() {
 
     }
 
-    iFrame = createFrame('Sunshine_policy', 15, 0, 0)
-    console.log(iFrame)
+
+
+    // iFrame = createFrame('Sunshine_policy', 15, 105, 0)
+    // console.log(iFrame)
 
     let createPlane = function () {
         let mat = new THREE.MeshStandardMaterial({
@@ -202,8 +224,8 @@ function init() {
 
 
     let createStars = function () {
-        let M = 28
-        let N = 28
+        let M = 32
+        let N = 32
         let scaler = 10;
         let vertices = [];
         let spacing_scale = 50
@@ -226,24 +248,90 @@ function init() {
     }
     createStars()
 
+    // MAP.load(`/static/sky.jpg`, function (texture) {
+    //     var material = new THREE.SpriteMaterial({ map: texture, color: 0xffffff });
+    //     var sprite = new THREE.Sprite(material);
+    //     sprite.geometry.scale(50, 50)
+    //     sprite.position.x = 200
+    //     sprite.position.y = 100
+    //     sprite.position.z = 0
 
+    //     console.log(sprite)
+    //     scene.add(sprite);
 
+    // });
+    let loadImage = function (url, x, y, z, r) {
+
+        var texture = MAP.load(`/static/${url}`)
+        var material = new THREE.SpriteMaterial({ map: texture, color: 0xffffff });
+        var sprite = new THREE.Sprite(material);
+        sprite.geometry.scale(r, r)
+        sprite.position.x = x
+        sprite.position.y = y
+        sprite.position.z = z
+
+        console.log(sprite)
+        scene.add(sprite);
+
+    }
+    // loadImage(0, 105, 0, 50)
+    loadImage('texture1.png', 25, 105, 0, 50)
+    // loadImage('nightsky2.jpg', 100, 105, 0, 50)
+    // loadImage(2, 105, 5, 50)
     //Large Star
     let terrain = new TerrainGenerator(scene)
     terrain.create()
     console.log(terrain)
 
-
     //points of interest
-    let SS = new SoundStation(scene)
-    SS.create()
-    console.log(terrain)
+    AL = new AudioListener(scene, camera)
+    AL.addSound()
+
+
+
+
+    let M = 3
+    let N = 3
+    let scaler = 10;
+    let vertices = [];
+    let spacing_scale = 50
+    let increment = 0
+    for (let x = -M; x <= M; x += 1) {
+        for (let z = -N; z <= N; z += 1) {
+            // vertices.push(x / scaler, 0 / scaler, z / scaler)
+            let ss = new SoundStation(scene, "POC")
+            let ssx = THREE.MathUtils.randFloatSpread(2000)
+            let ssy = 105 + THREE.MathUtils.randFloatSpread(5)
+            let ssz = THREE.MathUtils.randFloatSpread(2000)
+            ss.createCylinder(ssx, ssy, ssz, 0)
+
+
+            iFrame = createFrame(increment, ssx, ssy + 10, ssz)
+            console.log(iFrame)
+
+            // loadImage(10,Math.random()*200, ssz,50)
+
+            SS_Array.push(ss)
+
+        }
+        increment++;
+        increment = increment % 8;
+    }
+
 
     //Large Star
-    let p0 = new PhysicsObject(10000, 0, 100, 0, 0, 0, 0, 0, 1)
-    p0.isStationary = true
-    p0.density = 10000
 
+
+    collisions = new Collisions(scene, camera, SS_Array, AL)
+    console.log('Checking collision!')
+
+
+
+
+    //Large Star
+    let p0 = new PhysicsObject(10000, 0, 140, 0, 0, 0, 0, 0, 1)
+    p0.isStationary = true
+    p0.density = 1000000
     physicsObjects.push(p0)
     scene.add(p0.Sphere())
 
@@ -257,41 +345,56 @@ function init() {
 
 
     let createCylinder = function (_x, _y, _z, _rotation) {
-        let mat = new THREE.MeshPhongMaterial({
+        let mat = new THREE.MeshBasicMaterial({
             wireframe: false,
             transparent: true,
-            depthWrite: false,
-            side: THREE.DoubleSide,
+            depthWrite: true,
+
             color: new THREE.Color(0x6a7699),
-            opacity: .8
+            opacity: .2,
+
         });
-        let geo = new THREE.CylinderGeometry(500, 500,2000,320)
+        let geo = new THREE.IcosahedronGeometry(160, 8)
         let mesh = new THREE.Mesh(geo, mat)
         mesh.position.x = _x
         mesh.position.y = _y
         mesh.position.z = _z
         mesh.rotation.y = _rotation
-        scene.add(mesh)
-    }
-    createCylinder(0,0,0, 0)
 
+        SKYDOME = mesh
+        scene.add(SKYDOME)
+    }
+    createCylinder(0, 0, 0, 0)
+
+    updatePositionForCamera = function (camera, myObject3D) {
+        // fixed distance from camera to the object
+        var dist = 100;
+        var cwd = new THREE.Vector3();
+
+        camera.getWorldDirection(cwd);
+
+        cwd.multiplyScalar(dist);
+        cwd.add(camera.position);
+
+        myObject3D.position.set(cwd.x, cwd.y, cwd.z);
+        myObject3D.setRotationFromQuaternion(camera.quaternion);
+    }
 
     //Object creation loop
     for (let i = 0; i < 10; i++) {
-        let radius = 100
-        let x_offset = 100
-        let y_offset = 100
+        let radius = 50
+        let x_offset = 90
+        let y_offset = 140
         let z_offset = 0
         let px = x_offset + (2 * Math.random() - 1) * radius
         let py = y_offset + (2 * Math.random() - 1) * radius / 2
         let pz = z_offset + (2 * Math.random() - 1) * radius
-        let physicsObject = new PhysicsObject(1, px, py, pz, 0, 0, 0, .05, 1)
-        
+        let physicsObject = new PhysicsObject(1, px, py, pz, 0, 0, 0, .005, 1)
+
 
         physicsObjects.push(physicsObject)
-        
         scene.add(physicsObject.Sphere())
-        
+
     }
 
     console.log(physicsObjects)
@@ -303,6 +406,7 @@ function animate() {
 
     //Force Application
     if (frameIndex % 1 == 0) {
+
         for (let i = 0; i < physicsObjects.length; i++) {
             for (let j = 0; j < physicsObjects.length; j++) {
                 if (i !== j) {
@@ -314,15 +418,44 @@ function animate() {
                 }
             }
         }
+        for (let i = 0; i < SS_Array.length; i++) {
+            SS_Array[i].update()
+            // console.log(SS_Array)
+        }
+
+
     }
 
 
+
     const time = performance.now();
+    // SS.update()
+    updatePositionForCamera(camera, SKYDOME)
     controls.update(time, prevTime)
     renderer.render(scene, camera);
-    // labelRenderer.render(scene, camera)
+
+    if (frameIndex % 100 == 0) {
+        collisions.checkCollisions()
+
+
+
+    }
+
+    if (frameIndex % 500 == 0) {
+
+        for (let i = 0; i < label_meshes.length; i++) {
+            label_meshes[i].lookAt(camera.position)
+        }
+
+
+
+    }
+
+
+    labelRenderer.render(scene, camera)
     stats.update()
 
     //Frame Shut Down
     prevTime = time;
+    frameIndex++;
 }

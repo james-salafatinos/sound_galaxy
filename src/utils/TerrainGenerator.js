@@ -15,7 +15,8 @@ class TerrainGenerator {
 
             let aMap = new THREE.TextureLoader()
             .setPath("/static/")
-            .load('alphamap1.jpg')
+            .load('alphamap5.png')
+            // .load('alphamap4.png')
 
 
             disMap.wrapS = disMap.wrapT = THREE.RepeatWrapping
