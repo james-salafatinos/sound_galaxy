@@ -91,8 +91,8 @@ function init() {
 
     //Camera
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.y = 100;
-    camera.position.z = 150;
+    camera.position.y = 200;
+    camera.position.z = 250;
     camera.position.x = 10;
 
     //NO CLIP CONTROLS
@@ -120,56 +120,49 @@ function init() {
         scene.add(mesh)
     }
 
-    let createFrame = function (increment, _x, _y, _z) {
-        let mat = new THREE.MeshBasicMaterial({
-            transparent: true,
-            opacity: 0
-        });
-        let geo = new THREE.BoxGeometry(.5, .5, .5)
-        let mesh = new THREE.Mesh(geo, mat)
-        mesh.position.x = _x
-        mesh.position.y = _y
-        mesh.position.z = _z
+    // let createFrame = function (increment, _x, _y, _z) {
+    //     let mat = new THREE.MeshBasicMaterial({
+    //         transparent: true,
+    //         opacity: 0
+    //     });
+    //     let geo = new THREE.BoxGeometry(.5, .5, .5)
+    //     let mesh = new THREE.Mesh(geo, mat)
+    //     mesh.position.x = _x
+    //     mesh.position.y = _y
+    //     mesh.position.z = _z
 
 
 
-        var html = [
+    //     var html = [
 
-            '<h1 style="font-size:50vw; color:white">Strings To My Guitar</h1>',
-            '<h1 style=""font-size:50vw; color:white" >Kiss & Love & F*ck</h1>',
-            '<h1 style="font-size:50vw; color:white" >Better off as asteroids</h1>',
-            '<h1 style="font-size:50vw; color:white" >Dionysis Den</h1>',
-            '<h1 style="font-size:50vw; color:white">The Inferno</h1>',
-            '<h1 style=""font-size:50vw; color:white" >Colors Of My Mind</h1>',
-            '<h1 style="font-size:50vw; color:white" >My Crush</h1>',
-            '<h1 style="font-size:50vw; color:white" >Do I Have ADHD?</h1>',
-
-        ]
+    //         '<iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1235918551&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"><a href="https://soundcloud.com/firesurgery" title="Fire Surgery" target="_blank" style="color: #cccccc; text-decoration: none;">Fire Surgery</a> · <a href="https://soundcloud.com/firesurgery/kiss-and-love-and-fck" title="Kiss &amp; Love &amp; F*ck" target="_blank" style="color: #cccccc; text-decoration: none;">Kiss &amp; Love &amp; F*ck</a></div>',
+    //         '<iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1085210068&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"><a href="https://soundcloud.com/firesurgery" title="Fire Surgery" target="_blank" style="color: #cccccc; text-decoration: none;">Fire Surgery</a> · <a href="https://soundcloud.com/firesurgery/better-off-as-asteroids" title="Better off as asteroids" target="_blank" style="color: #cccccc; text-decoration: none;">Better off as asteroids</a></div>'
+    //     ]
 
 
-        let frameScale = new THREE.Vector3(.01, .01, .01)
+    //     let frameScale = new THREE.Vector3(.01, .01, .01)
 
-        const frameDiv = document.createElement('div');
-        frameDiv.className = 'label';
-        frameDiv.innerHTML = html[increment];
-        frameDiv.style.marginTop = '-1em';
-        const frameLabel = new CSS3DObject(frameDiv);
-        frameLabel.scale.set(frameScale.x, frameScale.y, frameScale.z)
-        console.log('frameLabel', frameLabel)
-        frameLabel.position.set(_x, _y, _z);
-        frameLabel.position.x = -1
-        frameLabel.position.y = 17
-        frameLabel.position.z = -4
+    //     const frameDiv = document.createElement('div');
+    //     frameDiv.className = 'label';
+    //     frameDiv.innerHTML = html[increment];
+    //     frameDiv.style.marginTop = '-1em';
+    //     const frameLabel = new CSS3DObject(frameDiv);
+    //     frameLabel.scale.set(frameScale.x, frameScale.y, frameScale.z)
+    //     console.log('frameLabel', frameLabel)
+    //     frameLabel.position.set(_x, _y, _z);
+    //     frameLabel.position.x = -1
+    //     frameLabel.position.y = 17
+    //     frameLabel.position.z = -4
 
-        mesh.add(frameLabel);
-        mesh.lookAt(camera.position)
-        label_meshes.push(mesh)
+    //     mesh.add(frameLabel);
+    //     mesh.lookAt(camera.position)
+    //     label_meshes.push(mesh)
 
-        scene.add(mesh)
-        // labels.push(frameLabel)
-        return mesh
+    //     scene.add(mesh)
+    //     // labels.push(frameLabel)
+    //     return mesh
 
-    }
+    // }
 
 
 
@@ -263,7 +256,7 @@ function init() {
     let loadImage = function (url, x, y, z, r) {
 
         var texture = MAP.load(`/static/${url}`)
-        var material = new THREE.SpriteMaterial({ map: texture, color: 0xffffff });
+        var material = new THREE.SpriteMaterial({ map: texture, color: 0xffffff, depthWrite:true, depthTest:true, });
         var sprite = new THREE.Sprite(material);
         sprite.geometry.scale(r, r)
         sprite.position.x = x
@@ -299,15 +292,25 @@ function init() {
     for (let x = -M; x <= M; x += 1) {
         for (let z = -N; z <= N; z += 1) {
             // vertices.push(x / scaler, 0 / scaler, z / scaler)
-            let ss = new SoundStation(scene, "POC")
+            let choose = function(){
+                if (Math.random()>.5){
+                    return "POC1"
+                }else{
+                    return "POC2"
+                }
+            }
+            let ss = new SoundStation(scene, choose(), label_meshes)
             let ssx = THREE.MathUtils.randFloatSpread(2000)
             let ssy = 105 + THREE.MathUtils.randFloatSpread(5)
             let ssz = THREE.MathUtils.randFloatSpread(2000)
             ss.createCylinder(ssx, ssy, ssz, 0)
+  
+    
+            // if (increment < 3){
+            //     iFrame = createFrame(increment, ssx, ssy + 10, ssz)
+            //     console.log(iFrame)
+            // }
 
-
-            iFrame = createFrame(increment, ssx, ssy + 10, ssz)
-            console.log(iFrame)
 
             // loadImage(10,Math.random()*200, ssz,50)
 
@@ -315,7 +318,6 @@ function init() {
 
         }
         increment++;
-        increment = increment % 8;
     }
 
 
