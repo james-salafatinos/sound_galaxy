@@ -1,58 +1,68 @@
-import * as THREE from '/modules/three.module.js';
 
+
+import { ParticleSystem } from "/utils/ParticleSystem.js";
+import * as THREE from '/modules/three.module.js';
 class Collisions {
-    constructor(scene, camera, SS_Array, AL) {
+    constructor(scene, camera, SS_Array, PS) {
         this.scene = scene
         this.camera = camera
         this.SS_Array = SS_Array
         this.entered = false;
-        this.AL = AL
+        // this.AL = AL //Audio Listener
+        this.PS = PS //ParticleSystem
         this.createdFrame = false;
-
-
-
+        this.yellow_color = new THREE.Color("hsl(60, 82%, 56%)");
+       
+        
     }
 
     checkCollisions() {
-
-
-        //Camera near SoundStation
         for (let i = 0; i < this.SS_Array.length; i++) {
-            // console.log(this.camera.position,this.SS_Array[i].mesh.position)
+
             let distance_vec = this.camera.position.clone().sub(this.SS_Array[i].mesh.position.clone())
             let distance_mag = distance_vec.length()
-            //  console.log(distance_mag)
-           
 
             if (distance_mag < 50) {
-                console.log("Near SoundStation!")
-                //But which sound to play?
                 let ss = this.SS_Array[i]
-                console.log(ss.name)
+                if (this.SS_Array[i].isPlaying) {
+                } else {
+
+                    // let selection = parseInt(Math.round(Math.random()*this.SS_Array.length))
+                    let selection = parseInt(Math.round(Math.random() * 10))
+                    console.log("Selection", selection)
 
 
-                if (this.SS_Array[i].isPlaying){
-                    console.log("Already Created")
-                } else{
-                    ss.createFrame(Math.random() > .5 ? 1 : 0, ss.mesh.position.x,ss.mesh.position.y,ss.mesh.position.z)
-               
+                    ss.createFrame(selection, ss.mesh.position.x, ss.mesh.position.y, ss.mesh.position.z)
+
+                    ss.mesh.material.wireframe = false;
+                    let ssl = this.SS_Array[i].light
+                    ssl.color = this.yellow_color
+
+                    this.PS.createParticles(ss.mesh.position.x, ss.mesh.position.y, ss.mesh.position.z)
+
                 }
-            
-                // this.AL.sound.play()
-
                 this.entered = true
             }
 
-       
 
-
+            if (distance_mag < 200) {
+                let ss = this.SS_Array[i]
+                if (this.SS_Array[i].isLit) {
+                    let ssl = this.SS_Array[i].light
+                    ssl.intensity += 2
+                } else {
+                    ss.createLight()
+                    this.SS_Array[i].isLit = true;
+                }
+                this.entered = true
+            } else {
+                if (this.SS_Array[i].isLit) {
+                    let ssl = this.SS_Array[i].light
+                    ssl.intensity -= 20
+                    // this.PS.destroyParticles()
+                }
+            }
         }
-        console.log(this.entered)
-
-
-
-
-
     }
 }
 

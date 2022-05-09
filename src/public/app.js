@@ -7,8 +7,9 @@ import { NoClipControls } from '/utils/NoClipControls.js'
 import { PhysicsObject } from '/utils/PhysicsObject.js'
 import { TerrainGenerator } from '/utils/TerrainGenerator.js'
 import { SoundStation } from '/utils/SoundStation.js'
-import { AudioListener } from '/utils/AudioListener.js'
+//import { AudioListener } from '/utils/AudioListener.js'
 import { Collisions } from '/utils/Collisions.js'
+import { ParticleSystem } from '/utils/ParticleSystem.js'
 //THREE JS
 let camera, scene, renderer, composer, controls
 let stats;
@@ -25,6 +26,7 @@ let arrow;
 // let SS;
 let SS_Array = [];
 let AL;
+let PS;
 let SKYDOME;
 let label_meshes = []
 
@@ -84,16 +86,16 @@ function init() {
 
     scene.add(dirLight)
 
-    const helper = new THREE.DirectionalLightHelper(dirLight, 10);
-    scene.add(helper)
+    // const helper = new THREE.DirectionalLightHelper(dirLight, 10);
+    // scene.add(helper)
 
 
 
     //Camera
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.y = 200;
-    camera.position.z = 250;
-    camera.position.x = 10;
+    camera.position.y = 60;
+    camera.position.z = 120;
+    camera.position.x = 0;
 
     //NO CLIP CONTROLS
     controls = new NoClipControls(scene, window, camera, document);
@@ -225,10 +227,14 @@ function init() {
         for (let x = -M; x <= M; x += 1) {
             for (let z = -N; z <= N; z += 1) {
                 // vertices.push(x / scaler, 0 / scaler, z / scaler)
+
+                let rx = THREE.MathUtils.randFloatSpread(2000)
+                let ry = THREE.MathUtils.randFloatSpread(2000) + 1100
+                let rz = THREE.MathUtils.randFloatSpread(2000)
                 vertices.push(
-                    THREE.MathUtils.randFloatSpread(2000),
-                    THREE.MathUtils.randFloatSpread(2000),
-                    THREE.MathUtils.randFloatSpread(2000))
+                    rx,
+                    ry,
+                    rz)
             }
         }
 
@@ -267,19 +273,21 @@ function init() {
         scene.add(sprite);
 
     }
-    // loadImage(0, 105, 0, 50)
-    loadImage('texture1.png', 25, 105, 0, 50)
-    // loadImage('nightsky2.jpg', 100, 105, 0, 50)
-    // loadImage(2, 105, 5, 50)
-    //Large Star
+
+
+
+    loadImage('texture1.png', 0, 60, 0, 50)
+
     let terrain = new TerrainGenerator(scene)
     terrain.create()
     console.log(terrain)
 
-    //points of interest
-    AL = new AudioListener(scene, camera)
-    AL.addSound()
+    // //points of interest
+    // AL = new AudioListener(scene, camera)
+    // AL.addSound()
 
+    PS = new ParticleSystem(scene)
+    PS.createParticles()
 
 
 
@@ -324,18 +332,41 @@ function init() {
     //Large Star
 
 
-    collisions = new Collisions(scene, camera, SS_Array, AL)
+    collisions = new Collisions(scene, camera, SS_Array, PS)
     console.log('Checking collision!')
 
 
 
+    
+    let createSphere = function (_x, _y, _z, _rotation) {
+        let mat = new THREE.MeshPhongMaterial({
+            wireframe: false,
+            transparent: true,
+
+            color: new THREE.Color(0x201a40),
+            opacity: .8,
+
+        });
+        let geo = new THREE.IcosahedronGeometry(50  , 8)
+        let mesh = new THREE.Mesh(geo, mat)
+        mesh.position.x = _x
+        mesh.position.y = _y
+        mesh.position.z = _z
+        mesh.rotation.y = _rotation
+
+        SKYDOME = mesh
+        scene.add(SKYDOME)
+    }
+  
 
     //Large Star
-    let p0 = new PhysicsObject(10000, 0, 140, 0, 0, 0, 0, 0, 1)
+    let p0 = new PhysicsObject(10000, 0, 250, 0, 0, 0, 0, 0, 1)
     p0.isStationary = true
     p0.density = 1000000
     physicsObjects.push(p0)
     scene.add(p0.Sphere())
+
+    createSphere(0, 250, 0, 0)
 
     // //Large Star
     // let p1 = new PhysicsObject(10000, 0, 0, 50, 0, 0, 0, 0, 1)
@@ -346,27 +377,6 @@ function init() {
     // scene.add(p1.Sphere())
 
 
-    let createCylinder = function (_x, _y, _z, _rotation) {
-        let mat = new THREE.MeshBasicMaterial({
-            wireframe: false,
-            transparent: true,
-            depthWrite: true,
-
-            color: new THREE.Color(0x6a7699),
-            opacity: .2,
-
-        });
-        let geo = new THREE.IcosahedronGeometry(160, 8)
-        let mesh = new THREE.Mesh(geo, mat)
-        mesh.position.x = _x
-        mesh.position.y = _y
-        mesh.position.z = _z
-        mesh.rotation.y = _rotation
-
-        SKYDOME = mesh
-        scene.add(SKYDOME)
-    }
-    createCylinder(0, 0, 0, 0)
 
     updatePositionForCamera = function (camera, myObject3D) {
         // fixed distance from camera to the object
@@ -385,13 +395,13 @@ function init() {
     //Object creation loop
     for (let i = 0; i < 10; i++) {
         let radius = 50
-        let x_offset = 90
-        let y_offset = 140
-        let z_offset = 0
+        let x_offset = 190
+        let y_offset = 250
+        let z_offset = 15
         let px = x_offset + (2 * Math.random() - 1) * radius
         let py = y_offset + (2 * Math.random() - 1) * radius / 2
         let pz = z_offset + (2 * Math.random() - 1) * radius
-        let physicsObject = new PhysicsObject(1, px, py, pz, 0, 0, 0, .005, 1)
+        let physicsObject = new PhysicsObject(1, px, py, pz, 0, 0, 0, .05, 1)
 
 
         physicsObjects.push(physicsObject)
@@ -432,28 +442,29 @@ function animate() {
 
     const time = performance.now();
     // SS.update()
-    updatePositionForCamera(camera, SKYDOME)
-    controls.update(time, prevTime)
-    renderer.render(scene, camera);
+    // updatePositionForCamera(camera, SKYDOME)
 
-    if (frameIndex % 100 == 0) {
+
+    if (frameIndex % 5 == 0) {
         collisions.checkCollisions()
-
-
-
+      
     }
+    
+    PS.updateParticles()
 
     if (frameIndex % 500 == 0) {
 
         for (let i = 0; i < label_meshes.length; i++) {
             label_meshes[i].lookAt(camera.position)
         }
-
-
-
     }
 
+    // SKYDOME.position.x += 1
+    // SKYDOME.position.z += 1
+    // SKYDOME.position.y -= 1
 
+    controls.update(time, prevTime)
+    renderer.render(scene, camera);
     labelRenderer.render(scene, camera)
     stats.update()
 
