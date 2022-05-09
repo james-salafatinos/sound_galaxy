@@ -28,7 +28,7 @@ class Collisions {
                 } else {
 
                     // let selection = parseInt(Math.round(Math.random()*this.SS_Array.length))
-                    let selection = parseInt(Math.round(Math.random() * 10))
+                    let selection = parseInt(Math.round(Math.random() * 71))
                     console.log("Selection", selection)
 
 
